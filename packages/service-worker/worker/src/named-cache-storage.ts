@@ -20,11 +20,17 @@ export class NamedCacheStorage<T extends CacheStorage> implements CacheStorage {
   constructor(readonly original: T, private cacheNamePrefix: string) {}
 
   delete(cacheName: string): Promise<boolean> {
-    return this.original.delete(`${this.cacheNamePrefix}:${cacheName}`);
+    return this.original.delete(`${this.cacheNamePrefix}:${cacheName}`).catch((e) => {
+      console.log('CacheErr#1', e);
+      return false;
+    });
   }
 
   has(cacheName: string): Promise<boolean> {
-    return this.original.has(`${this.cacheNamePrefix}:${cacheName}`);
+    return this.original.has(`${this.cacheNamePrefix}:${cacheName}`).catch((e) => {
+      console.log('CacheErr#2', e);
+      return false;
+    });
   }
 
   async keys(): Promise<string[]> {
@@ -35,7 +41,10 @@ export class NamedCacheStorage<T extends CacheStorage> implements CacheStorage {
   }
 
   match(request: RequestInfo, options?: MultiCacheQueryOptions): Promise<Response|undefined> {
-    return this.original.match(request, options);
+    return this.original.match(request, options).catch((e) => {
+      console.log('CacheErr#3', e);
+      return undefined;
+    });
   }
 
   async open(cacheName: string): Promise<NamedCache> {
