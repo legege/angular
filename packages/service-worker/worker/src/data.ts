@@ -483,7 +483,9 @@ export class DataGroup {
       Promise<{res: Response, age: number}|null> {
     // Look for a response in the cache. If one exists, return it.
     const cache = await this.cache;
-    let res = await cache.match(req, this.config.cacheQueryOptions);
+    let res = await cache.match(req, this.config.cacheQueryOptions).catch((e) => {
+      console.log('ERR4', e);
+    });
     if (res !== undefined) {
       // A response was found in the cache, but its age is not yet known. Look it up.
       try {
@@ -559,7 +561,11 @@ export class DataGroup {
   async cleanup(): Promise<void> {
     // Remove both the cache and the database entries which track LRU stats.
     await Promise.all([
-      this.cache.then(cache => this.adapter.caches.delete(cache.name)),
+      this.cache.then(
+          cache => this.adapter.caches.delete(cache.name),
+          (e) => {
+            console.log('ERR5', e);
+          }),
       this.ageTable.then(table => this.db.delete(table.name)),
       this.lruTable.then(table => this.db.delete(table.name)),
     ]);
@@ -586,8 +592,14 @@ export class DataGroup {
   private async clearCacheForUrl(url: string): Promise<void> {
     const [cache, ageTable] = await Promise.all([this.cache, this.ageTable]);
     await Promise.all([
-      cache.delete(this.adapter.newRequest(url, {method: 'GET'}), this.config.cacheQueryOptions),
-      cache.delete(this.adapter.newRequest(url, {method: 'HEAD'}), this.config.cacheQueryOptions),
+      cache.delete(this.adapter.newRequest(url, {method: 'GET'}), this.config.cacheQueryOptions)
+          .catch((e) => {
+            console.log('ERR6', e);
+          }),
+      cache.delete(this.adapter.newRequest(url, {method: 'HEAD'}), this.config.cacheQueryOptions)
+          .catch((e) => {
+            console.log('ERR7', e);
+          }),
       ageTable.delete(url),
     ]);
   }

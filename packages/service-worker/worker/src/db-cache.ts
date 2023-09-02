@@ -65,23 +65,38 @@ export class CacheTable implements Table {
   }
 
   'delete'(key: string): Promise<boolean> {
-    return this.cache.delete(this.request(key), this.cacheQueryOptions);
-  }
-
-  keys(): Promise<string[]> {
-    return this.cache.keys().then(requests => requests.map(req => req.url.slice(1)));
-  }
-
-  read(key: string): Promise<any> {
-    return this.cache.match(this.request(key), this.cacheQueryOptions).then(res => {
-      if (res === undefined) {
-        return Promise.reject(new NotFound(this.name, key));
-      }
-      return res.json();
+    return this.cache.delete(this.request(key), this.cacheQueryOptions).catch((e) => {
+      console.log('ERR1', e);
+      return false;
     });
   }
 
+  keys(): Promise<string[]> {
+    return this.cache.keys().then(
+        requests => requests.map(req => req.url.slice(1)),
+        (e) => {
+          console.log('ERR2', e);
+          return [];
+        },
+    );
+  }
+
+  read(key: string): Promise<any> {
+    return this.cache.match(this.request(key), this.cacheQueryOptions)
+        .then(
+            res => {
+              if (res === undefined) {
+                return Promise.reject(new NotFound(this.name, key));
+              }
+              return res.json();
+            },
+            (e) => {
+              console.log('ERR3', e);
+            });
+  }
+
   write(key: string, value: Object): Promise<void> {
-    return this.cache.put(this.request(key), this.adapter.newResponse(JSON.stringify(value)));
+    return this.cache.put(this.request(key), this.adapter.newResponse(JSON.stringify(value)))
+        .catch(() => {});
   }
 }

@@ -80,7 +80,9 @@ export abstract class AssetGroup {
     const cache = await this.cache;
     const meta = await this.metadata;
     const req = this.adapter.newRequest(url);
-    const res = await cache.match(req, this.config.cacheQueryOptions);
+    const res = await cache.match(req, this.config.cacheQueryOptions).catch((e) => {
+      console.log('ERR8', e);
+    });
     if (res === undefined) {
       return UpdateCacheStatus.NOT_CACHED;
     }
@@ -128,7 +130,9 @@ export abstract class AssetGroup {
 
       // Look for a cached response. If one exists, it can be used to resolve the fetch
       // operation.
-      const cachedResponse = await cache.match(req, this.config.cacheQueryOptions);
+      const cachedResponse = await cache.match(req, this.config.cacheQueryOptions).catch((e) => {
+        console.log('ERR9', e);
+      });
       if (cachedResponse !== undefined) {
         // A response has already been cached (which presumably matches the hash for this
         // resource). Check whether it's safe to serve this resource from cache.
@@ -248,7 +252,9 @@ export abstract class AssetGroup {
 
     // Lookup the response in the cache.
     const request = this.adapter.newRequest(url);
-    const response = await cache.match(request, this.config.cacheQueryOptions);
+    const response = await cache.match(request, this.config.cacheQueryOptions).catch((e) => {
+      console.log('ERR10', e);
+    });
     if (response === undefined) {
       // It's not found, return null.
       return null;
@@ -463,7 +469,9 @@ export abstract class AssetGroup {
       // If a previously cached version was available, copy it over to this cache.
       if (res !== null) {
         // Copy to this cache.
-        await cache.put(req, res);
+        await cache.put(req, res).catch((e) => {
+          console.log('ERR11', e);
+        });
 
         // No need to do anything further with this resource, it's now cached properly.
         return true;
@@ -530,7 +538,9 @@ export class PrefetchAssetGroup extends AssetGroup {
       const req = this.adapter.newRequest(url);
 
       // First, check the cache to see if there is already a copy of this resource.
-      const alreadyCached = (await cache.match(req, this.config.cacheQueryOptions)) !== undefined;
+      const alreadyCached = (await cache.match(req, this.config.cacheQueryOptions).catch((e) => {
+                              console.log('ERR12', e);
+                            })) !== undefined;
 
       // If the resource is in the cache already, it can be skipped.
       if (alreadyCached) {
@@ -567,7 +577,9 @@ export class PrefetchAssetGroup extends AssetGroup {
             // It's possible that the resource in question is already cached. If so,
             // continue to the next one.
             const alreadyCached =
-                (await cache.match(req, this.config.cacheQueryOptions) !== undefined);
+                (await cache.match(req, this.config.cacheQueryOptions).catch((e) => {
+                  console.log('ERR13', e);
+                }) !== undefined);
             if (alreadyCached) {
               return;
             }
@@ -581,7 +593,9 @@ export class PrefetchAssetGroup extends AssetGroup {
 
             // Write it into the cache. It may already be expired, but it can still serve
             // traffic until it's updated (stale-while-revalidate approach).
-            await cache.put(req, res.response);
+            await cache.put(req, res.response).catch((e) => {
+              console.log('ERR14', e);
+            });
             await metaTable.write(req.url, {...res.metadata, used: false} as UrlMetadata);
           }, Promise.resolve());
     }
@@ -608,7 +622,9 @@ export class LazyAssetGroup extends AssetGroup {
       const req = this.adapter.newRequest(url);
 
       // First, check the cache to see if there is already a copy of this resource.
-      const alreadyCached = (await cache.match(req, this.config.cacheQueryOptions)) !== undefined;
+      const alreadyCached = (await cache.match(req, this.config.cacheQueryOptions).catch((e) => {
+                              console.log('ERR15', e);
+                            })) !== undefined;
 
       // If the resource is in the cache already, it can be skipped.
       if (alreadyCached) {
